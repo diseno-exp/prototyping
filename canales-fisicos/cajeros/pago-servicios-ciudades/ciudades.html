@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo · Pago de servicios públicos (Agua)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f8fe; --white:#fff; --black:#000; --midnight-600:#4d86d4;
+    --cta:#1479ff; --text:#111827; --company-text:#152a46; --company-border:#ccd9e9;
+    --avatar-bg:#b4d0fb; --icon:#0b3b82; --shadow:rgba(157,168,178,.85);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#dfe5ee;font-family:'Poppins',sans-serif;color:var(--black);-webkit-tap-highlight-color:transparent;user-select:none}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+  #stage{width:1024px;height:768px;position:relative;background:var(--bg);transform-origin:center center;box-shadow:0 10px 40px rgba(0,0,0,.15);overflow:hidden}
+  button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+
+  /* ---------- Header ---------- */
+  .header{position:absolute;left:1px;top:0;width:1024px;padding:8px 16px 0;display:flex;flex-direction:column;gap:16px}
+  .header-row{display:flex;align-items:center;gap:19px;width:958px;height:60px}
+  .superint{width:6px;height:60px;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0}
+  .superint i{display:block;height:1px;background:#6b6b6b}
+  .header-main{display:flex;align-items:center;justify-content:space-between;width:933px}
+  .brands{display:flex;align-items:center;gap:16.6px}
+  .logos{display:flex;gap:9.8px}
+  .tile{width:38px;height:39.2px;border-radius:4.9px;background:linear-gradient(to left,#fafafa,#dfdfdf 98.6%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .tile svg{display:block}
+  .cajero{display:flex;align-items:center;gap:16px;height:60px;width:53px}
+  .cajero .vline{width:1px;height:52px;background:#e3e8ef}
+  .cajero .txt{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:12px;line-height:normal}
+  .cajero .num{color:#5c8ff8}
+  .hline{height:1px;width:100%;background:#e3e8ef}
+
+  /* ---------- Screens ---------- */
+  .screen{position:absolute;inset:0;display:none}
+  .screen.active{display:block;animation:fade .18s ease-out}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  .title{font-weight:700;font-size:40px;line-height:50px;letter-spacing:-.2px;text-align:center}
+
+  /* Tile menus (screen 1 & 2) */
+  .tiles-wrap{position:absolute;width:768px;display:flex;flex-direction:column;align-items:center;gap:56px}
+  .tile-grid{display:flex;flex-direction:column;gap:24px}
+  .tile-row{display:flex;justify-content:center}
+  .card{width:200px;height:228px;background:var(--white);border:1.19px solid var(--midnight-600);border-radius:14.285px;display:flex;flex-direction:column;align-items:center;gap:24px;padding:24px 0;transition:transform .08s, box-shadow .08s}
+  .card.shadow{filter:drop-shadow(0 4.762px 2.381px var(--shadow))}
+  .card:active{transform:scale(.97)}
+  .card .label{font-weight:500;font-size:20px;line-height:24px;letter-spacing:.2385px;text-align:center;width:100%}
+  .avatar{width:92px;height:92px;border-radius:50%;background:var(--avatar-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* Company screen */
+  .company-layout{position:absolute;left:0;top:216px;width:1024px;padding:0 64px;display:flex;gap:32px;align-items:stretch}
+  .zones{width:240px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+  .zone{width:100%;display:flex;align-items:center;gap:4px;padding:8px;border-radius:8px;background:var(--white);border:1px solid var(--midnight-600);text-align:left;font-size:16px;line-height:normal;color:var(--text);height:42px}
+  .zone span{flex:1}
+  .zone.selected{background:var(--cta);border-color:var(--cta);color:var(--white);font-weight:600}
+  .zone .chev{flex-shrink:0}
+  .zone.selected .chev path{stroke:#fff}
+  .panel{flex:1;min-width:0;height:392px;background:var(--white);border:1px solid var(--midnight-600);border-radius:8px;padding:24px 16px;display:flex;flex-direction:column;gap:16px;align-items:flex-end}
+  .companies{width:100%;flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,minmax(0,1fr));gap:16px}
+  .company{display:flex;align-items:center;gap:12px;min-height:0;overflow:hidden;padding:12px;border-radius:10px;background:var(--white);border:1px solid var(--company-border);text-align:left;font-weight:500;font-size:16px;line-height:24px;color:var(--company-text)}
+  .company span{flex:1;min-width:0;overflow-wrap:anywhere}
+  .company.long{font-size:15px;line-height:20px}
+  .company small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400;font-size:13px;line-height:18px;color:#5b6b82}
+  .empty{grid-column:1/-1;grid-row:1/-1;padding:40px 16px;text-align:center;font-size:18px;line-height:28px;color:#5b6b82}
+  .zones.compact{gap:6px}.zones.compact .zone{height:38px}
+  .pg-info{align-self:center;font-size:14px;color:#5b6b82;margin-right:4px}
+  .company.selected{border:2px solid var(--cta);padding:11px;background:#f2f7ff}
+  .radio{width:24px;height:24px;border-radius:50%;border:2px solid var(--cta);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .company.selected .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--cta)}
+  .pager{display:flex;gap:16px;margin-top:auto}
+  .pg{width:40px;height:40px;border-radius:50%;border:2px solid var(--cta);display:flex;align-items:center;justify-content:center;background:var(--white)}
+  .pg:disabled{opacity:.35;cursor:default}
+  .pg-hidden{visibility:hidden}
+
+  .btn{position:absolute;top:638px;width:262px;height:89px;background:var(--white);border:1px solid var(--cta);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:36px;filter:drop-shadow(0 4px 2px var(--shadow));transition:transform .08s}
+  .btn:active{transform:scale(.97)}
+  .btn.back{left:128px}
+  .btn.next{left:634px}
+
+  /* End-of-flow overlay */
+  .done{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,25,50,.45);z-index:10}
+  .done.show{display:flex}
+  .done-card{background:#fff;border-radius:16px;padding:40px 48px;width:560px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+  .done-card h2{font-size:28px;font-weight:700;line-height:36px;margin-bottom:12px}
+  .done-card p{font-size:18px;line-height:28px;color:#333}
+  .done-card .sum{margin:20px 0 28px;padding:16px;border-radius:10px;background:var(--bg);text-align:left;font-size:16px;line-height:26px}
+  .done-card .sum b{font-weight:600}
+  .done-card button{background:var(--cta);color:#fff;font-size:20px;padding:14px 40px;border-radius:12px}
+
+  /* Facilitator hint */
+  .hint{position:fixed;right:8px;bottom:4px;opacity:.6;font:12px/1.4 'Poppins',sans-serif;color:#6b7280}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- Shared header -->
+  <header class="header" aria-hidden="true">
+    <div class="header-row">
+      <div class="superint"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="header-main">
+        <div class="brands">
+          <div class="logos">
+            <div class="tile" title="Banco de Bogotá">
+              <svg width="30" height="28" viewBox="0 0 30 28"><circle cx="15" cy="7" r="5.2" fill="#0043a9"/><path d="M15 4.2a2.8 2.8 0 1 0 2.6 3.8h-2.2" stroke="#fff" stroke-width="1.3" fill="none"/><text x="15" y="18.5" font-family="Poppins" font-weight="600" font-size="4.6" fill="#0043a9" text-anchor="middle">Banco de</text><text x="15" y="24" font-family="Poppins" font-weight="600" font-size="4.6" fill="#0043a9" text-anchor="middle">Bogotá</text></svg>
+            </div>
+            <div class="tile" title="Banco de Occidente">
+              <svg width="28" height="28" viewBox="0 0 28 28"><path d="M14 1.5l5 5-5 5-5-5z" fill="#0072ce"/><path d="M14 4.5l2 2-2 2-2-2z" fill="#fff"/><text x="14" y="19" font-family="Poppins" font-weight="600" font-size="4.2" fill="#0072ce" text-anchor="middle">Banco de</text><text x="14" y="24" font-family="Poppins" font-weight="600" font-size="4.2" fill="#0072ce" text-anchor="middle">Occidente</text></svg>
+            </div>
+            <div class="tile" title="Banco Popular">
+              <svg width="28" height="28" viewBox="0 0 28 28"><path d="M11 3h5a3 3 0 0 1 0 6h-2v4h-3z" fill="#13a538"/><text x="14" y="19.5" font-family="Poppins" font-weight="700" font-size="5" fill="#13a538" text-anchor="middle">banco</text><text x="14" y="25" font-family="Poppins" font-weight="700" font-size="5" fill="#13a538" text-anchor="middle">popular</text></svg>
+            </div>
+            <div class="tile" title="AV Villas">
+              <svg width="28" height="27" viewBox="0 0 28 27"><circle cx="14" cy="9" r="6.5" fill="#c3161c"/><path d="M10.5 9.5l2.5 2.5 4.5-6" stroke="#fff" stroke-width="1.6" fill="none"/><text x="14" y="23" font-family="Poppins" font-weight="700" font-style="italic" font-size="5.4" fill="#c3161c" text-anchor="middle">AV Villas</text></svg>
+            </div>
+          </div>
+          <svg width="99" height="27" viewBox="0 0 99 27" aria-label="Grupo Aval"><text x="13" y="8" font-family="Poppins" font-size="8.5" letter-spacing="1.4" fill="#3a74d8">Grupo</text><g fill="none" stroke-width="4.6" stroke-linejoin="miter"><path d="M1 26L10.5 12.5L20 26" stroke="#2f6fd6"/><path d="M23 12.5L32.5 26L42 12.5" stroke="#3a7fe0"/><path d="M45 26L54.5 12.5L64 26" stroke="#2f6fd6"/><path d="M69 12.5V24H82" stroke="#2f6fd6"/></g></svg>
+        </div>
+        <div class="cajero"><div class="vline"></div><div class="txt"><span>cajero</span><span class="num">7891</span></div></div>
+      </div>
+    </div>
+    <div class="hline"></div>
+  </header>
+
+  <!-- Screen 1: Tipo de factura -->
+  <section class="screen active" id="s-menu">
+    <div class="tiles-wrap" style="left:128px;top:154px">
+      <h1 class="title" style="width:768px">¿Qué tipo de factura vas a pagar?</h1>
+      <div class="tile-grid">
+        <div class="tile-row" style="gap:24px">
+          <button class="card" data-go="s-servicios"><div class="avatar" data-icon="drop"></div><div class="label">Servicios<br>públicos</div></button>
+          <button class="card" data-soon><div class="avatar" data-icon="drop"></div><div class="label">Seguridad<br>social (PILA)</div></button>
+          <button class="card" data-soon><div class="avatar" data-icon="cart"></div><div class="label">Otros<br>convenios</div></button>
+        </div>
+        <div class="tile-row" style="gap:24px">
+          <button class="card" data-soon><div class="avatar" data-icon="drop"></div><div class="label">Medicina<br>prepagada</div></button>
+          <button class="card" data-soon><div class="avatar" data-icon="drop"></div><div class="label">Seguros</div></button>
+          <button class="card" data-soon><div class="avatar" data-icon="cart"></div><div class="label">Educación</div></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2: Servicio público -->
+  <section class="screen" id="s-servicios">
+    <div class="tiles-wrap" style="left:127px;top:155px">
+      <h1 class="title" style="width:768px">Selecciona el servicio público a pagar</h1>
+      <div class="tile-grid" style="width:680px">
+        <div class="tile-row" style="gap:32px">
+          <button class="card" data-svc="agua"><div class="avatar" data-icon="drop"></div><div class="label">Agua</div></button>
+          <button class="card" data-svc="luz"><div class="avatar" data-icon="bolt"></div><div class="label">Luz</div></button>
+          <button class="card" data-svc="gas"><div class="avatar" data-icon="flame"></div><div class="label">Gas</div></button>
+        </div>
+        <div class="tile-row" style="gap:32px">
+          <button class="card shadow" data-svc="telefono"><div class="avatar" data-icon="phone"></div><div class="label">Teléfono</div></button>
+          <button class="card shadow" data-svc="celular"><div class="avatar" data-icon="mobile"></div><div class="label">Celular</div></button>
+          <button class="card shadow" data-svc="hogar"><div class="avatar" data-icon="home"></div><div class="label">Hogar empresas</div></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 3: Empresa (zona + convenio) -->
+  <section class="screen" id="s-empresa">
+    <h1 class="title" style="position:absolute;left:122px;top:130px;width:780px;line-height:40px">¿A qué empresa vas a pagar?</h1>
+    <div class="company-layout">
+      <div class="zones" id="zones"></div>
+      <div class="panel" id="panel">
+        <div class="companies" id="companies"></div>
+        <div class="pager" id="pager"><span class="pg-info" id="pginfo"></span>
+          <button class="pg" id="prev" aria-label="Anterior"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M10 3.5L5.5 8 10 12.5" stroke="#1479ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="pg" id="next" aria-label="Siguiente"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M6 3.5L10.5 8 6 12.5" stroke="#1479ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <button class="btn back" data-go="s-servicios">Regresar</button>
+    <button class="btn next" id="continuar">Continuar</button>
+  </section>
+
+  <!-- End of flow -->
+  <div class="done" id="done">
+    <div class="done-card">
+      <h2>Fin de la tarea</h2>
+      <p>Seleccionaste la empresa a la que vas a pagar.</p>
+      <div class="sum" id="summary"></div>
+      <button id="restart">Volver a empezar</button>
+    </div>
+  </div>
+</div>
+<div class="hint">Facilitador: tecla Esc reinicia el prototipo</div>
+
+<script>
+/* =========================================================
+   DATOS — convenios de "servicios_categorizados_ajustado.xlsx" (Hoja2)
+   Formato: [NOMBRE (convenio), CONVENIO, servicio, REGION]
+   servicio: agua | luz | gas | telefono | celular | hogar (Hogar + Empresas)
+   Las empresas con región "Nacional" aparecen en todas las zonas.
+   Las de región "Sin identificar" aparecen en "Otras regiones".
+   ========================================================= */
+const CONVENIOS = [["Agua Gas Energia y Tel Epm","Agua Gas Energia y Tel Epm","luz","Antioquia"],["Telefono Etb Empresa Bogota","Telefono Etb Empresa Bogota","telefono","Bogotá y Cundinamarca"],["Gas Natural Metrogas Bmanga","Gas Natural Metrogas Bmanga","gas","Santander"],["Energia Emsa","Energia Emsa","luz","Llanos y Orinoquía"],["Claro Comcel","Claro Comcel","celular","Nacional"],["Movistar Servicio Movil y Fijo","Movistar Servicio Movil y Fijo","celular","Nacional"],["Acueducto y Alcantarillado Bogota","Acueducto y Alcantarillado Bogota","agua","Bogotá y Cundinamarca"],["Acueducto Aguas de Cartagena","Acueducto Aguas de Cartagena","agua","Caribe"],["Essa Electrificadora de Santander","Essa Electrificadora de Santander","luz","Santander"],["Energia Electrocaqueta","Energia Electrocaqueta","luz","Sur y Amazonía"],["Energia Chec Caldas","Energia Chec Caldas","luz","Eje Cafetero"],["Consulnetworks Sa Esp","Consulnetworks Sa Esp","hogar","Pacífico"],["Enel Recaudo Masivo Energia","Enel Recaudo Masivo Energia","luz","Bogotá y Cundinamarca"],["Acueducto Bucaramanga","Acueducto Bucaramanga","agua","Santander"],["Acueducto Popayan","Acueducto Popayan","agua","Pacífico"],["Telefono Emcali Servicios Publicos","Telefono Emcali Servicios Publicos","telefono","Pacífico"],["Acueducto y Energia Emcali","Acueducto y Energia Emcali","agua","Pacífico"],["Gases del Caribe","Gases del Caribe","gas","Caribe"],["Acueducto Empopasto","Acueducto Empopasto","agua","Pacífico"],["Acueducto Aguas de Manizales","Acueducto Aguas de Manizales","agua","Eje Cafetero"],["Telefono Empresa de Buga","Telefono Empresa de Buga","telefono","Pacífico"],["Cetsa","Cetsa","luz","Pacífico"],["Bioagricola Sa Esp","Bioagricola Sa Esp","agua","Llanos y Orinoquía"],["Telefono Etb Llanos","Telefono Etb Llanos","telefono","Llanos y Orinoquía"],["Acueducto Veolia Aguas de Tunja Sa","Acueducto Veolia Aguas de Tunja Sa","agua","Bogotá y Cundinamarca"],["Energia Electrificadora Boyaca Sa","Energia Electrificadora Boyaca Sa","luz","Bogotá y Cundinamarca"],["Cedenar","Cedenar","luz","Pacífico"],["Gdo Gases de Occidente","Gdo Gases de Occidente","gas","Pacífico"],["Llanogas Sa Esp","Llanogas Sa Esp","gas","Llanos y Orinoquía"],["Acueducto Villavicencio Eaav","Acueducto Villavicencio Eaav","agua","Llanos y Orinoquía"],["Vanti Sa Esp Gas Natural","Vanti Sa Esp Gas Natural","gas","Bogotá y Cundinamarca"],["GAS NTRAL SURTIGAS SA ESP","GAS NTRAL SURTIGAS SA ESP","gas","Caribe"],["Gas Ntral Alcanos de Colombia Sa","Gas Ntral Alcanos de Colombia Sa","gas","Sur y Amazonía"],["Acueducto Piedecuestana Servicios","Acueducto Piedecuestana Servicios","agua","Santander"],["Energia Central Electricas Ntestder","Energia Central Electricas Ntestder","luz","Santander"],["Acueducto Triple a Facturacion","Acueducto Triple a Facturacion","agua","Caribe"],["Vanti Gasoriente Sa Esp","Vanti Gasoriente Sa Esp","gas","Santander"],["Gas Natural Cundiboyacense Sa","Gas Natural Cundiboyacense Sa","gas","Bogotá y Cundinamarca"],["Celsia Valle","Celsia Valle","luz","Pacífico"],["Efigas Gas Natural","Efigas Gas Natural","gas","Eje Cafetero"],["Tiempo al Aire Tigo","Tiempo al Aire Tigo","celular","Nacional"],["Tigo Une 500 Celular","Tigo Une 500 Celular","celular","Nacional"],["Telefono Empres Regional Telecomuni","Telefono Empres Regional Telecomuni","telefono","Pacífico"],["Combustibles Liq de Colombia Sa","Combustibles Liq de Colombia Sa","gas","Nacional"],["Rastre","Rastre","hogar","Nacional"],["Lidagas S a e S P","Lidagas S a e S P","gas","Sur y Amazonía"],["2 Infitulua","2 Infitulua","hogar","Pacífico"],["Alcantarillado Aseo Zipaquira","Alcantarillado Aseo Zipaquira","agua","Bogotá y Cundinamarca"],["Tigo Une 100","Tigo Une 100","hogar","Nacional"],["Media Commerce Partners Sas","Media Commerce Partners Sas","hogar","Nacional"],["Tecnomobiles Sas","Tecnomobiles Sas","hogar","Nacional"],["Facilservicios Exito","Facilservicios Exito","hogar","Nacional"],["el Pais Sa","el Pais Sa","hogar","Pacífico"],["Acueducto de Girardot Acuagyr","Acueducto de Girardot Acuagyr","agua","Bogotá y Cundinamarca"],["Tecnomovil Barras Tarjeta","Tecnomovil Barras Tarjeta","celular","Nacional"],["Acueducto Alcantarillado Yopal","Acueducto Alcantarillado Yopal","agua","Llanos y Orinoquía"],["Madigas Ingenieros Sa Esp","Madigas Ingenieros Sa Esp","gas","Santander"],["Infibague Alumbrado Publico","Infibague Alumbrado Publico","luz","Eje Cafetero"],["Infibague Plazas de Mercado","Infibague Plazas de Mercado","hogar","Eje Cafetero"],["Infibague Arrendamientos","Infibague Arrendamientos","hogar","Eje Cafetero"],["Cusianagas Sas Esp","Cusianagas Sas Esp","gas","Llanos y Orinoquía"],["Mossad","Mossad","hogar","Nacional"],["Acueducto un de Aseo Municipal","Acueducto un de Aseo Municipal","agua","Llanos y Orinoquía"],["Ts Online Sas","Ts Online Sas","hogar","Nacional"],["Llanogas Codigo de Barras","Llanogas Codigo de Barras","gas","Llanos y Orinoquía"],["Aseo Tecnico Sas Esp","Aseo Tecnico Sas Esp","agua","Bogotá y Cundinamarca"],["Interseo Sas Esp","Interseo Sas Esp","agua","Bogotá y Cundinamarca"],["Acuasur Sa Esp","Acuasur Sa Esp","agua","Bogotá y Cundinamarca"],["Servicios Empresariales de Aseo Esp","Servicios Empresariales de Aseo Esp","agua","Pacífico"],["Bioagricola Codigo de Barras","Bioagricola Codigo de Barras","agua","Llanos y Orinoquía"],["Acueducto Eaaamesp Madrid","Acueducto Eaaamesp Madrid","agua","Bogotá y Cundinamarca"],["Energia Enertotal S.a E.s.p","Energia Enertotal S.a E.s.p","luz","Nacional"],["Bemovilsas","Bemovilsas","hogar","Nacional"],["Claro Empresas","Claro Empresas","hogar","Nacional"],["Canal de Vta Prep y Agent Comercial","Canal de Vta Prep y Agent Comercial","hogar","Nacional"],["Claro Telmex Telefonia","Claro Telmex Telefonia","telefono","Nacional"],["Claro Impuestos","Claro Impuestos","hogar","Nacional"],["Gas Natural Dom Enerca","Gas Natural Dom Enerca","gas","Llanos y Orinoquía"],["Acueducto Esp Pacho Sa","Acueducto Esp Pacho Sa","agua","Bogotá y Cundinamarca"],["Emca Esp","Emca Esp","agua","Eje Cafetero"],["Acueducto Aguas del Norte","Acueducto Aguas del Norte","agua","Santander"],["Energia de Casanare Enerca","Energia de Casanare Enerca","luz","Llanos y Orinoquía"],["Grupo Syc Colombia Sas","Grupo Syc Colombia Sas","hogar","Nacional"],["Acueducto Cam Rionegro","Acueducto Cam Rionegro","agua","Antioquia"],["Acueducto Mpio Anolaima Servi Publ","Acueducto Mpio Anolaima Servi Publ","agua","Bogotá y Cundinamarca"],["GAS NTRAL SUPER DE NARINO SA ESP","GAS NTRAL SUPER DE NARINO SA ESP","gas","Pacífico"],["Sip Alo Sas","Sip Alo Sas","celular","Nacional"],["Empresa Publicas de el Espinal","Empresa Publicas de el Espinal","agua","Eje Cafetero"],["Aire Facturacion","Aire Facturacion","luz","Caribe"],["Acueducto Empresa Publica Frontino","Acueducto Empresa Publica Frontino","agua","Antioquia"],["Acueducto Aguas de Buga Servi Publi","Acueducto Aguas de Buga Servi Publi","agua","Pacífico"],["Caribemar de la Costa Facturacion","Caribemar de la Costa Facturacion","luz","Caribe"],["Acueducto de Funza","Acueducto de Funza","agua","Bogotá y Cundinamarca"],["Acueducto Servicio Publi Tocancipa","Acueducto Servicio Publi Tocancipa","agua","Bogotá y Cundinamarca"],["Operadores Servicio Sierra Sa Esp","Operadores Servicio Sierra Sa Esp","agua","Caribe"],["Acueducto Aguas Dibulla Sa Esp","Acueducto Aguas Dibulla Sa Esp","agua","Caribe"],["Emserchia Esp","Emserchia Esp","agua","Bogotá y Cundinamarca"],["Acueducto Empresa Pb de Sibate Rdo","Acueducto Empresa Pb de Sibate Rdo","agua","Bogotá y Cundinamarca"],["Essmar Esp","Essmar Esp","agua","Caribe"],["Wom","Wom","celular","Nacional"],["Energia Cens Epm","Energia Cens Epm","luz","Santander"],["Comercial Card","Comercial Card","hogar","Nacional"],["Acueducto Empumelgar Esp Recaudo","Acueducto Empumelgar Esp Recaudo","agua","Eje Cafetero"],["Urbaser Yumbo Sa Esp","Urbaser Yumbo Sa Esp","agua","Pacífico"],["Gas Ntral Montagas 2","Gas Ntral Montagas 2","gas","Caribe"],["Acueducto Santa Ana","Acueducto Santa Ana","agua","Eje Cafetero"],["Rayogas Sa Esp","Rayogas Sa Esp","gas","Bogotá y Cundinamarca"],["Acueducto Emserpla Esp Recaudo","Acueducto Emserpla Esp Recaudo","agua","Caribe"],["Acueducto Emcorinto Esp","Acueducto Emcorinto Esp","agua","Pacífico"],["Super Pagos","Super Pagos","hogar","Nacional"],["Empochachagui Sas Esp","Empochachagui Sas Esp","agua","Pacífico"],["Atesa de Occidente Sa Esp","Atesa de Occidente Sa Esp","agua","Eje Cafetero"],["Socios Suscriptores Cartagenita","Socios Suscriptores Cartagenita","agua","Caribe"],["Acueducto Ibal Sa Esp Oficial","Acueducto Ibal Sa Esp Oficial","agua","Eje Cafetero"],["Acueducto Agua Viva Sa Esp","Acueducto Agua Viva Sa Esp","agua","Antioquia"],["Gas Chilco","Gas Chilco","gas","Sur y Amazonía"],["Ceo Compania Energetica de Occident","Ceo Compania Energetica de Occident","luz","Pacífico"],["Energia Vatia Sa Esp","Energia Vatia Sa Esp","luz","Nacional"],["Terranova Servicios","Terranova Servicios","agua","Bogotá y Cundinamarca"],["Servicios Publicos Cartago","Servicios Publicos Cartago","agua","Pacífico"],["Conexred Sa","Conexred Sa","hogar","Nacional"],["Esp Guaduas","Esp Guaduas","agua","Bogotá y Cundinamarca"],["Urbaser Popayan Sa Esp","Urbaser Popayan Sa Esp","agua","Pacífico"],["Gasguajira","Gasguajira","gas","Caribe"],["Tigo Une 900","Tigo Une 900","hogar","Nacional"],["Acueducto Aquaterra","Acueducto Aquaterra","agua","Antioquia"],["Acueducto Esp la Cimarrona","Acueducto Esp la Cimarrona","agua","Antioquia"],["Acueducto Esp Marinilla","Acueducto Esp Marinilla","agua","Antioquia"],["Acueducto Emp Pub Puerto Boyaca","Acueducto Emp Pub Puerto Boyaca","agua","Bogotá y Cundinamarca"],["Celsia Tolima","Celsia Tolima","luz","Eje Cafetero"],["Claro Volante","Claro Volante","celular","Nacional"],["Empresa Servicios Publicos Aguazul","Empresa Servicios Publicos Aguazul","agua","Llanos y Orinoquía"],["Gas Ntral Supergas de Narino","Gas Ntral Supergas de Narino","gas","Pacífico"],["Acueducto Espa Acacias","Acueducto Espa Acacias","agua","Llanos y Orinoquía"],["Acueducto Serramonte Sa Esp","Acueducto Serramonte Sa Esp","agua","Bogotá y Cundinamarca"],["Digital Global Sas","Digital Global Sas","hogar","Nacional"],["Emp Acueducto y Alcant de Mosquera","Emp Acueducto y Alcant de Mosquera","agua","Bogotá y Cundinamarca"],["Empresas Publicas de la Ceja Esp","Empresas Publicas de la Ceja Esp","agua","Antioquia"],["Inkco Sas","Inkco Sas","hogar","Nacional"],["Tecnomovil Sa","Tecnomovil Sa","celular","Nacional"],["Comunicaciones del Caribe Sas","Comunicaciones del Caribe Sas","hogar","Caribe"],["Acueducto Aguas Marakata Sa Esp","Acueducto Aguas Marakata Sa Esp","agua","Antioquia"],["Terrbus Sas","Terrbus Sas","hogar","Nacional"],["Soluciones Moviles Megared","Soluciones Moviles Megared","hogar","Nacional"],["My Smart Life Sas","My Smart Life Sas","hogar","Nacional"],["Acueducto Acuavalle Sa Esp","Acueducto Acuavalle Sa Esp","agua","Pacífico"],["Aguasdelnorte Esp","Aguasdelnorte Esp","agua","Santander"],["Tigo Une 700","Tigo Une 700","hogar","Nacional"],["Tigo Une 300","Tigo Une 300","hogar","Nacional"],["Tigo Une 200","Tigo Une 200","hogar","Nacional"],["Artecom","Artecom","celular","Nacional"],["Acueducto Mun Arbelaez Servi Public","Acueducto Mun Arbelaez Servi Public","agua","Bogotá y Cundinamarca"],["Aseo Bogota","Aseo Bogota","agua","Bogotá y Cundinamarca"],["Colombia Gps Sas","Colombia Gps Sas","hogar","Nacional"],["Epm no Recurrente","Epm no Recurrente","luz","Antioquia"],["Desechos Especial Sa Esp","Desechos Especial Sa Esp","hogar","Bogotá y Cundinamarca"],["Energia Ruitoque","Energia Ruitoque","luz","Santander"],["Tracker de Colombia S.a.s","Tracker de Colombia S.a.s","hogar","Nacional"],["Acueducto San Agustin","Acueducto San Agustin","agua","Sur y Amazonía"],["Aseo Soluciones Ambientales","Aseo Soluciones Ambientales","agua","Bogotá y Cundinamarca"],["Team Comunicaciones","Team Comunicaciones","celular","Nacional"],["Tigo Une 600","Tigo Une 600","hogar","Nacional"],["Tigo Une 800","Tigo Une 800","hogar","Nacional"],["Recaudo Emsertabio","Recaudo Emsertabio","agua","Bogotá y Cundinamarca"],["Empresa de Serv Publicos Fusagasuga","Empresa de Serv Publicos Fusagasuga","agua","Bogotá y Cundinamarca"],["Enel Gas","Enel Gas","gas","Bogotá y Cundinamarca"],["Acueducto Edesa Meta","Acueducto Edesa Meta","agua","Llanos y Orinoquía"],["Acueducto Alto Magdalena","Acueducto Alto Magdalena","agua","Sur y Amazonía"],["Acueducto Empunilo Servicios Publi","Acueducto Empunilo Servicios Publi","agua","Bogotá y Cundinamarca"],["Aseo Atesa Occidente Sa Esp Pereira","Aseo Atesa Occidente Sa Esp Pereira","agua","Eje Cafetero"],["Aseo Interaseo del Valle Sa Esp","Aseo Interaseo del Valle Sa Esp","agua","Pacífico"],["Aseo Interaseo Archipielago Sa Esp","Aseo Interaseo Archipielago Sa Esp","agua","Caribe"],["Aseo del Norte Sa Esp","Aseo del Norte Sa Esp","agua","Caribe"],["Aseo Interseo Sas Esp","Aseo Interseo Sas Esp","agua","Bogotá y Cundinamarca"],["Aseo Especial Soledad Sa Esp","Aseo Especial Soledad Sa Esp","agua","Caribe"],["Acueducto Operadores Lasierra Saesp","Acueducto Operadores Lasierra Saesp","agua","Caribe"],["Interaseo Aeropuerto Sas Esp","Interaseo Aeropuerto Sas Esp","agua","Bogotá y Cundinamarca"],["Aseoupar Sas Esp","Aseoupar Sas Esp","agua","Caribe"],["Aseo del Norte Sa Esp Sistem","Aseo del Norte Sa Esp Sistem","agua","Caribe"],["Aseo Especial Soledad Sa Esp Sist","Aseo Especial Soledad Sa Esp Sist","agua","Caribe"],["Espucal Esp","Espucal Esp","agua","Bogotá y Cundinamarca"],["Bit","Bit","hogar","Nacional"],["Css","Css","hogar","Nacional"],["Acueducto Esp Delsantuario","Acueducto Esp Delsantuario","agua","Antioquia"],["Sitionuevo Acueducto","Sitionuevo Acueducto","agua","Caribe"],["ETELCO","ETELCO","hogar","Nacional"],["Recaudo Emserchoachi","Recaudo Emserchoachi","agua","Bogotá y Cundinamarca"],["Aguas de Chinauta Esp","Aguas de Chinauta Esp","agua","Bogotá y Cundinamarca"],["Servicios Publicos Santuario Rda","Servicios Publicos Santuario Rda","agua","Eje Cafetero"],["Epz","Epz","agua","Bogotá y Cundinamarca"],["Novotechno","Novotechno","hogar","Nacional"],["Mision Ambiental Sa","Mision Ambiental Sa","agua","Antioquia"],["YUMBO LIMPIO SA ESP","YUMBO LIMPIO SA ESP","agua","Pacífico"],["Emp Colombiana de Aseo","Emp Colombiana de Aseo","agua","Antioquia"],["Accion Fiduciaria Recverde","Accion Fiduciaria Recverde","hogar","Nacional"],["GAS NEIVA S A NEIVA","GAS NEIVA S A NEIVA","gas","Sur y Amazonía"],["Practisistemas","Practisistemas","hogar","Nacional"],["Gas Zipa Sas Esp","Gas Zipa Sas Esp","gas","Bogotá y Cundinamarca"],["Logirastreo","Logirastreo","hogar","Nacional"],["Recaudo Daguas Sa Esp","Recaudo Daguas Sa Esp","agua","Pacífico"],["Ingenieria Electronica Colombi","Ingenieria Electronica Colombi","hogar","Nacional"],["Empresas Municipales de Tibasosa","Empresas Municipales de Tibasosa","agua","Bogotá y Cundinamarca"],["Rma Enlaces y Seguridad Sas","Rma Enlaces y Seguridad Sas","hogar","Nacional"],["Yavegas","Yavegas","gas","Bogotá y Cundinamarca"],["Soul Centro de Tecnologia","Soul Centro de Tecnologia","hogar","Nacional"],["Dobleclick Software Pse","Dobleclick Software Pse","hogar","Nacional"],["Piedecuestana Servicios Recaudo II","Piedecuestana Servicios Recaudo II","agua","Santander"],["Asuservi Tunal","Asuservi Tunal","agua","Bogotá y Cundinamarca"],["Tei Soluciones Inteligentes","Tei Soluciones Inteligentes","hogar","Nacional"],["Enermas Recaudo","Enermas Recaudo","luz","Nacional"],["Amtec","Amtec","hogar","Nacional"],["Empadilla","Empadilla","agua","Caribe"],["Facilservicios","Facilservicios","hogar","Nacional"],["Nidacon Multiservicios Sas","Nidacon Multiservicios Sas","hogar","Nacional"],["Junta Accion Comunal el Reiro Cali","Junta Accion Comunal el Reiro Cali","agua","Pacífico"],["Atyco","Atyco","hogar","Nacional"],["CONHYDRA","CONHYDRA","agua","Antioquia"],["Servicio Aseo Cali Sico","Servicio Aseo Cali Sico","agua","Pacífico"],["Cajas Sicacom","Cajas Sicacom","hogar","Nacional"],["Servicios Publicos Esp la Vega","Servicios Publicos Esp la Vega","agua","Bogotá y Cundinamarca"],["Rhandom Sas","Rhandom Sas","hogar","Nacional"],["Mr Movil Sas","Mr Movil Sas","celular","Nacional"],["MI Oficinaco Sas","MI Oficinaco Sas","hogar","Nacional"],["Munsoraserv","Munsoraserv","agua","Bogotá y Cundinamarca"],["Urbaser Facatativa","Urbaser Facatativa","agua","Bogotá y Cundinamarca"],["Urbaser Soacha","Urbaser Soacha","agua","Bogotá y Cundinamarca"],["Acuabuitrera Cali Esp","Acuabuitrera Cali Esp","agua","Pacífico"],["Aguas de Castilla Sa Esp","Aguas de Castilla Sa Esp","agua","Caribe"],["Energia Electrica Emeesa","Energia Electrica Emeesa","luz","Llanos y Orinoquía"],["Tecnisoluciones Denar Sas","Tecnisoluciones Denar Sas","hogar","Nacional"],["Telepetroleo","Telepetroleo","hogar","Santander"],["Acueducto Canasgordas Cali","Acueducto Canasgordas Cali","agua","Pacífico"],["Empresa de Servicios de Nobsa","Empresa de Servicios de Nobsa","agua","Bogotá y Cundinamarca"],["It Business Partners","It Business Partners","hogar","Nacional"],["Emvalle Sas Esp Carrera 100","Emvalle Sas Esp Carrera 100","agua","Pacífico"],["Mun de Tulua Imp de Vehiculos Sp","Mun de Tulua Imp de Vehiculos Sp","hogar","Pacífico"],["Recaudo Aguas de Bta Av CL 24 37 15","Recaudo Aguas de Bta Av CL 24 37 15","agua","Bogotá y Cundinamarca"],["Paratebueno Esp","Paratebueno Esp","agua","Bogotá y Cundinamarca"],["Colenergia","Colenergia","luz","Nacional"],["Empresas Municipales Calima","Empresas Municipales Calima","agua","Pacífico"],["Atesa Sta Marta","Atesa Sta Marta","agua","Caribe"],["Afrocaucana de Aguas","Afrocaucana de Aguas","agua","Pacífico"],["Aguas del Parque Esp","Aguas del Parque Esp","agua","Eje Cafetero"],["Telegirardot Calle 15 no 32 591","Telegirardot Calle 15 no 32 591","telefono","Bogotá y Cundinamarca"],["Epc Concepcion","Epc Concepcion","agua","Antioquia"],["Atesa Sta Marta Cartera","Atesa Sta Marta Cartera","agua","Caribe"],["Firavitoba Recaudo Acueducto","Firavitoba Recaudo Acueducto","agua","Bogotá y Cundinamarca"],["Empopamplona","Empopamplona","agua","Santander"],["Alumbrado Recaudo Cartera Popayan","Alumbrado Recaudo Cartera Popayan","luz","Pacífico"],["Alumbrado Recaudo Corriente Popayan","Alumbrado Recaudo Corriente Popayan","luz","Pacífico"],["Asesores Ptc","Asesores Ptc","hogar","Nacional"],["Global Redes Obras","Global Redes Obras","gas","Bogotá y Cundinamarca"],["Soluciones Ventas e Instalaciones","Soluciones Ventas e Instalaciones","hogar","Nacional"],["Urbaser Montenegro","Urbaser Montenegro","agua","Eje Cafetero"],["Urbaser la Tebaida","Urbaser la Tebaida","agua","Eje Cafetero"],["Urbaser Duitama","Urbaser Duitama","agua","Bogotá y Cundinamarca"],["Urbaser Tunja","Urbaser Tunja","agua","Bogotá y Cundinamarca"],["Urbaser Monteria","Urbaser Monteria","agua","Caribe"],["Cabrerana de Servicios Publicos","Cabrerana de Servicios Publicos","agua","Sur y Amazonía"],["Servimontanita","Servimontanita","agua","Sur y Amazonía"],["Aguas de Aburra","Aguas de Aburra","agua","Antioquia"],["Manaure Emp Acueducto Agua Potable","Manaure Emp Acueducto Agua Potable","agua","Caribe"],["Colgas Glp Residencial","Colgas Glp Residencial","gas","Nacional"],["Edeq Domicializacion","Edeq Domicializacion","luz","Eje Cafetero"],["Mun Tesalia Transporte","Mun Tesalia Transporte","hogar","Sur y Amazonía"],["Asocabeceras Holanda el Limon","Asocabeceras Holanda el Limon","agua","Sur y Amazonía"],["Uramita Acueducto","Uramita Acueducto","agua","Antioquia"],["Esp la Celia Acuerdos de Pago","Esp la Celia Acuerdos de Pago","agua","Eje Cafetero"],["Emtel","Emtel","telefono","Pacífico"],["Red Vital Paipa Esp","Red Vital Paipa Esp","agua","Bogotá y Cundinamarca"],["Espyondo","Espyondo","agua","Antioquia"],["San Cayetano Servicio Acueducto","San Cayetano Servicio Acueducto","agua","Santander"],["Efipay Efectivos","Efipay Efectivos","hogar","Nacional"],["Ciudad Limpia Yumbo","Ciudad Limpia Yumbo","agua","Pacífico"],["Vidagas","Vidagas","gas","Nacional"],["Recaudo Aaa Aguas de Padilla","Recaudo Aaa Aguas de Padilla","agua","Caribe"],["Montagas Consignacion Vendedores","Montagas Consignacion Vendedores","gas","Caribe"],["Acueducto Santa Barbara Gachancipa","Acueducto Santa Barbara Gachancipa","agua","Bogotá y Cundinamarca"],["Recaudo Servicios Publicos","Recaudo Servicios Publicos","agua","Bogotá y Cundinamarca"],["Eaayopalpiloto","Eaayopalpiloto","agua","Llanos y Orinoquía"],["Asobosachoque","Asobosachoque","agua","Bogotá y Cundinamarca"],["Acuaser Cali","Acuaser Cali","agua","Pacífico"],["Operadores de Servicio de la Sierra","Operadores de Servicio de la Sierra","agua","Caribe"],["Ciudad Limpia Puerto Tejada","Ciudad Limpia Puerto Tejada","agua","Pacífico"],["California Servicios Publicos","California Servicios Publicos","agua","Santander"],["Servicios Publicos Matanza","Servicios Publicos Matanza","agua","Santander"],["Esp Acueducto Guamo","Esp Acueducto Guamo","agua","Eje Cafetero"],["Empoviterbo Recaudo Servpublicos","Empoviterbo Recaudo Servpublicos","agua","Eje Cafetero"],["Acueducto la Rejoya Popayan","Acueducto la Rejoya Popayan","agua","Pacífico"],["Empoduitama Servicios Publicos","Empoduitama Servicios Publicos","agua","Bogotá y Cundinamarca"],["Tech365 Sas","Tech365 Sas","hogar","Nacional"],["Grupo J S Atepra Sas","Grupo J S Atepra Sas","hogar","Nacional"],["Spectratel Antioquia","Spectratel Antioquia","hogar","Antioquia"],["Esp Nocaima","Esp Nocaima","agua","Bogotá y Cundinamarca"],["Grupo de Negocios Temporales Sas","Grupo de Negocios Temporales Sas","hogar","Nacional"],["Recaudo Ciudad Limpia Mpio Palermo","Recaudo Ciudad Limpia Mpio Palermo","agua","Sur y Amazonía"],["Rec Ciudad Limpia Mpio Villavieja","Rec Ciudad Limpia Mpio Villavieja","agua","Sur y Amazonía"],["Recaudo Ciudad Limpia Mpio Yaguara","Recaudo Ciudad Limpia Mpio Yaguara","agua","Sur y Amazonía"],["Empresas Publicas de Abejorral","Empresas Publicas de Abejorral","agua","Antioquia"],["Gases de la Guajira Sa Esp","Gases de la Guajira Sa Esp","gas","Caribe"],["Gas Natural del Centro Sa","Gas Natural del Centro Sa","gas","Eje Cafetero"],["Practycoin Sas","Practycoin Sas","hogar","Nacional"],["Epsa Infibague","Epsa Infibague","luz","Eje Cafetero"]];
+const ZONAS = ["Antioquia","Bogotá y Cundinamarca","Caribe","Eje Cafetero","Llanos y Orinoquía","Pacífico","Santander","Sur y Amazonía"];
+const OTRAS = "Otras regiones";
+const SERVICIOS = {agua:"Agua",luz:"Luz",gas:"Gas",telefono:"Teléfono",celular:"Celular",hogar:"Hogar empresas"};
+const POR_PAGINA = 6;
+
+/* ---------- Iconos (outline, estilo Sherpa) ---------- */
+const ring = '<path d="M20 4.5a15.5 15.5 0 0 1 15.5 15.5" /><path d="M20 4.5A15.5 15.5 0 0 0 4.5 20" /><path d="M4.5 20A15.5 15.5 0 0 0 20 35.5M20 35.5A15.5 15.5 0 0 0 35.5 20" stroke-dasharray="3.2 2.6"/>';
+const ICONS = {
+  drop:  ring + '<path d="M20 11.5c-3.4 4.2-5.4 7.3-5.4 9.9a5.4 5.4 0 0 0 10.8 0c0-2.6-2-5.7-5.4-9.9z"/>',
+  bolt:  ring + '<path d="M21.5 10.5l-6.5 10.5h5.2l-1.7 8.5 6.5-10.5h-5.2z"/>',
+  flame: ring + '<path d="M20 10.5c.5 3-3.6 5-4.9 9a5.2 5.2 0 0 0 9.8 3.2c.9-2.8-.2-5-1.4-6.4-.2 1.4-.9 2.4-1.8 2.8.6-3.2-.2-6.5-1.7-8.6z"/><path d="M20 25.6a1.9 1.9 0 0 1-1.9-1.9c0-1.3 1.9-3.1 1.9-3.1s1.9 1.8 1.9 3.1a1.9 1.9 0 0 1-1.9 1.9z"/>',
+  phone: '<path d="M12.5 7.5h4l2 6-2.8 1.8a14 14 0 0 0 9 9l1.8-2.8 6 2v4a2.6 2.6 0 0 1-2.8 2.6C18.9 29.3 10.7 21.1 9.9 10.3a2.6 2.6 0 0 1 2.6-2.8z"/>',
+  mobile:'<rect x="12.5" y="5.5" width="15" height="29" rx="2.6"/><path d="M12.5 29.5h15"/>',
+  home:  '<path d="M7 18.5L20 7.5l13 11"/><path d="M10.5 16v17h19V16"/><path d="M17 33v-8.5a3 3 0 0 1 6 0V33"/>',
+  cart:  '<path d="M6 11h3.2l3.3 13.5h14.3l3.4-11"/><circle cx="14.2" cy="30" r="2"/><circle cx="25" cy="30" r="2"/><text x="19.5" y="19" font-family="Poppins" font-weight="700" font-size="9" fill="#0b3b82" stroke="none" text-anchor="middle">$</text><path d="M30.5 8.5l2.5-2.5"/>'
+};
+document.querySelectorAll('[data-icon]').forEach(el=>{
+  el.innerHTML = `<svg width="50" height="50" viewBox="0 0 40 40" fill="none" stroke="#0b3b82" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.icon]}</svg>`;
+});
+
+/* ---------- Navegación ---------- */
+const state = { svc: null, zona: null, pagina: 0, empresa: null };
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+  if(id==='s-empresa'){ state.zona=null; state.pagina=0; state.empresa=null; renderZonas(); renderEmpresas(); }
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+document.querySelectorAll('[data-svc]').forEach(b=>b.addEventListener('click',()=>{ state.svc=b.dataset.svc; go('s-empresa'); }));
+
+/* ---------- Datos por servicio / zona ---------- */
+function zonasDelServicio(){
+  const hayOtras = CONVENIOS.some(c=>c[2]===state.svc && c[3]==='Sin identificar');
+  return hayOtras ? [...ZONAS, OTRAS] : ZONAS;
+}
+function empresasDeZona(zona){
+  const rs = CONVENIOS.filter(c=>c[2]===state.svc);
+  const regionales = zona===OTRAS ? rs.filter(c=>c[3]==='Sin identificar')
+                                  : rs.filter(c=>c[3].toLowerCase()===zona.toLowerCase());
+  const nacionales = zona===OTRAS ? [] : rs.filter(c=>c[3]==='Nacional');
+  const lista = [...regionales, ...nacionales].sort((a,b)=>a[0].localeCompare(b[0],'es',{sensitivity:'base'}));
+  // si el nombre de la empresa se repite, se muestra el convenio debajo para diferenciarlas
+  const cuenta = {}; lista.forEach(c=>cuenta[c[0]]=(cuenta[c[0]]||0)+1);
+  return lista.map((c,i)=>({id:i, nombre:c[0], convenio:c[1], dup:cuenta[c[0]]>1}));
+}
+
+/* ---------- Zonas ---------- */
+const chev = '<svg class="chev" width="16" height="16" viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="#111827" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function renderZonas(){
+  const wrap = document.getElementById('zones');
+  const zonas = zonasDelServicio();
+  wrap.classList.toggle('compact', zonas.length>8);
+  wrap.innerHTML = '';
+  zonas.forEach(z=>{
+    const b = document.createElement('button');
+    b.className = 'zone' + (state.zona===z ? ' selected' : '');
+    b.innerHTML = `<span>${z}</span>${chev}`;
+    b.onclick = ()=>{ state.zona=z; state.pagina=0; state.empresa=null; renderZonas(); renderEmpresas(); };
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------- Empresas ---------- */
+function renderEmpresas(){
+  const list = document.getElementById('companies');
+  const pager = document.getElementById('pager');
+  list.innerHTML = '';
+  if(state.zona===null){ pager.classList.add('pg-hidden'); return; }
+  const emp = empresasDeZona(state.zona);
+  if(!emp.length){
+    list.innerHTML = '<div class="empty">No hay empresas de este servicio en esta zona.<br>Elige otra zona.</div>';
+    pager.classList.add('pg-hidden'); return;
+  }
+  const total = Math.ceil(emp.length/POR_PAGINA);
+  emp.slice(state.pagina*POR_PAGINA, (state.pagina+1)*POR_PAGINA).forEach(e=>{
+    const b = document.createElement('button');
+    const sel = state.empresa && state.empresa.id===e.id;
+    b.className = 'company' + (sel ? ' selected' : '');
+    b.innerHTML = `<span>${e.nombre}</span><div class="radio"></div>`;
+    b.onclick = ()=>{ state.empresa=e; renderEmpresas(); };
+    list.appendChild(b);
+    if(b.querySelector('span').offsetHeight > 72) b.classList.add('long');
+  });
+  pager.classList.toggle('pg-hidden', total<=1);
+  document.getElementById('pginfo').textContent = `${state.pagina+1} de ${total}`;
+  document.getElementById('prev').disabled = state.pagina===0;
+  document.getElementById('next').disabled = state.pagina>=total-1;
+}
+document.getElementById('prev').onclick = ()=>{ if(state.pagina>0){ state.pagina--; renderEmpresas(); } };
+document.getElementById('next').onclick = ()=>{
+  const total = Math.ceil(empresasDeZona(state.zona).length/POR_PAGINA);
+  if(state.pagina<total-1){ state.pagina++; renderEmpresas(); }
+};
+
+/* ---------- Continuar / fin ---------- */
+document.getElementById('continuar').onclick = ()=>{
+  if(!state.empresa) return; // sin selección no avanza
+  document.getElementById('summary').innerHTML =
+    `<b>Servicio:</b> ${SERVICIOS[state.svc]}<br><b>Zona:</b> ${state.zona}<br><b>Empresa:</b> ${state.empresa.nombre}<br><b>Convenio:</b> ${state.empresa.convenio}`;
+  document.getElementById('done').classList.add('show');
+};
+function restart(){ document.getElementById('done').classList.remove('show'); go('s-menu'); }
+document.getElementById('restart').onclick = restart;
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') restart(); });
+
+/* ---------- Escalar el lienzo 1024×768 a la ventana ---------- */
+function fit(){
+  const s = Math.min(window.innerWidth/1024, window.innerHeight/768);
+  document.getElementById('stage').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>
